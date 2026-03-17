@@ -1,0 +1,11 @@
+BUILD INSTRUCTIONS
+==================
+
+Compile:
+  g++ -std=c++17 -Iheaders src/*.cpp main.cpp -o exchange_app
+
+Run:
+  ./exchange_app
+
+Clean:
+  rm -f exchange_app
