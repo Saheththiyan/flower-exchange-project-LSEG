@@ -14,4 +14,5 @@ public:
 
     const vector<Order>& getBuyOrders() const;
     const vector<Order>& getSellOrders() const;
+    optional<Order> tryMatch(const Order& incomingOrder);
 };

@@ -44,7 +44,7 @@ Order CSVOrderReader::parseOrder(const vector<string>& fields, size_t lineNumber
         throw runtime_error("Price must be positive at line " + to_string(lineNumber));
     }
 
-    return Order{fields[0], fields[1], sideValue == 1 ? Side::BUY : Side::SELL, quantity, price};
+    return Order{"",fields[0], fields[1], sideValue == 1 ? Side::BUY : Side::SELL, quantity, price};
 }
 
 vector<Order> CSVOrderReader::readOrders() {

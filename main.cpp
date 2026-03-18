@@ -16,17 +16,45 @@ int main() {
         vector<ExecutionReport> rows;
         int id = 1;
 
-        for (const auto& order : orders) {
-            orderBook.addOrder(order);
-            rows.push_back(ExecutionReport{
-                "ord" + to_string(id++),
-                order.clientOrderID,
-                order.instrument,
-                ExecStatus::New,
-                order.side,
-                order.quantity,
-                order.price
-            });
+        for (auto order : orders) {
+            order.orderID = "ord" + to_string(id++);
+
+            auto matchedOrder = orderBook.tryMatch(order);
+
+            if (matchedOrder) {
+                rows.push_back(ExecutionReport{
+                    order.orderID,
+                    order.clientOrderID,
+                    order.instrument,
+                    ExecStatus::Fill,
+                    order.side,
+                    order.quantity,
+                    order.price
+                });
+
+                rows.push_back(ExecutionReport{
+                    matchedOrder->orderID,
+                    matchedOrder->clientOrderID,
+                    matchedOrder->instrument,
+                    ExecStatus::Fill,
+                    matchedOrder->side,
+                    matchedOrder->quantity,
+                    matchedOrder->price
+                });
+            } else {    
+
+                orderBook.addOrder(order);
+                rows.push_back(ExecutionReport{
+                    order.orderID,
+                    order.clientOrderID,
+                    order.instrument,
+                    ExecStatus::New,
+                    order.side,
+                    order.quantity,
+                    order.price
+                });
+
+            }
         }
 
         reportWriter.writeRows(rows);

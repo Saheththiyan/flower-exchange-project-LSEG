@@ -16,6 +16,7 @@ enum class ExecStatus {
 };
 
 struct Order {
+    string orderID;
     string clientOrderID;
     string instrument;
     Side side;
