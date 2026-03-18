@@ -6,13 +6,13 @@ using namespace std;
 
 class OrderBook {
 private:
-    vector<Order> buyOrders;
-    vector<Order> sellOrders;
+    map<double, deque<Order>, greater<double>> buyOrders;
+    map<double, deque<Order>> sellOrders;
 
 public:
     void addOrder(const Order& order);
 
-    const vector<Order>& getBuyOrders() const;
-    const vector<Order>& getSellOrders() const;
+    vector<Order> getBuyOrders() const;
+    vector<Order> getSellOrders() const;
     optional<Order> tryMatch(const Order& incomingOrder);
 };

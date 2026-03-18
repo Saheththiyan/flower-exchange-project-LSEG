@@ -1,13 +1,13 @@
 #include "headers/csvOrderReader.hpp"
 #include "headers/executionReportWriter.hpp"
-#include "headers/orderBook.hpp"
+#include "headers/instrumentOrderBook.hpp"
 #include <bits/stdc++.h>
 using namespace std;
 
 int main() {
     try {
         CSVOrderReader reader("order.csv");
-        OrderBook orderBook;
+        InstrumentOrderBook instrumentOrderBook;
         ExecutionReportWriter reportWriter("execution_rep.csv");
 
         const auto orders = reader.readOrders();
@@ -19,7 +19,7 @@ int main() {
         for (auto order : orders) {
             order.orderID = "ord" + to_string(id++);
 
-            auto matchedOrder = orderBook.tryMatch(order);
+            auto matchedOrder = instrumentOrderBook.getOrderBook(order.instrument).tryMatch(order);
 
             if (matchedOrder) {
                 rows.push_back(ExecutionReport{
@@ -43,7 +43,7 @@ int main() {
                 });
             } else {    
 
-                orderBook.addOrder(order);
+                instrumentOrderBook.getOrderBook(order.instrument).addOrder(order);
                 rows.push_back(ExecutionReport{
                     order.orderID,
                     order.clientOrderID,
@@ -58,6 +58,8 @@ int main() {
         }
 
         reportWriter.writeRows(rows);
+
+        instrumentOrderBook.printAvailableOrderBooks();
     } catch (const exception& ex) {
         cerr << "Error: " << ex.what() << endl;
         return 1;
