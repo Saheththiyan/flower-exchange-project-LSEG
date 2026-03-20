@@ -24,22 +24,55 @@ void InstrumentOrderBook::printAvailableOrderBooks() const {
 
         cout << "\nInstrument: " << instrument << "\n";
 
-        cout << "BUY BOOK (Price desc, FIFO)\n";
-        cout << left << setw(12) << "OrderID" << setw(10) << "Qty" << setw(10) << "Price" << "\n";
-        if (buy.empty()) cout << "(empty)\n";
-        for (const auto& o : buy) {
-            cout << left << setw(12) << o.orderID
-                 << setw(10) << o.quantity
-                 << fixed << setprecision(2) << o.price << "\n";
+        constexpr int orderIdWidth = 12;
+        constexpr int qtyWidth = 10;
+        constexpr int priceWidth = 10;
+        constexpr int sideWidth = orderIdWidth + qtyWidth + priceWidth;
+
+        cout << left << setw(sideWidth) << "BUY BOOK (Price desc, FIFO)"
+             << " | "
+             << "SELL BOOK (Price asc, FIFO)" << "\n";
+
+        cout << left << setw(orderIdWidth) << "OrderID"
+             << setw(qtyWidth) << "Qty"
+             << setw(priceWidth) << "Price"
+             << " | "
+             << setw(orderIdWidth) << "OrderID"
+             << setw(qtyWidth) << "Qty"
+             << setw(priceWidth) << "Price" << "\n";
+
+        size_t rowCount = max(buy.size(), sell.size());
+        if (rowCount == 0) {
+            cout << left << setw(sideWidth) << "(empty)"
+                 << " | "
+                 << "(empty)" << "\n";
+            continue;
         }
 
-        cout << "SELL BOOK (Price asc, FIFO)\n";
-        cout << left << setw(12) << "OrderID" << setw(10) << "Qty" << setw(10) << "Price" << "\n";
-        if (sell.empty()) cout << "(empty)\n";
-        for (const auto& o : sell) {
-            cout << left << setw(12) << o.orderID
-                 << setw(10) << o.quantity
-                 << fixed << setprecision(2) << o.price << "\n";
+        for (size_t i = 0; i < rowCount; ++i) {
+            if (i < buy.size()) {
+                cout << left << setw(orderIdWidth) << buy[i].orderID
+                     << setw(qtyWidth) << buy[i].quantity
+                     << setw(priceWidth) << fixed << setprecision(2) << buy[i].price;
+            } else {
+                cout << left << setw(orderIdWidth) << ""
+                     << setw(qtyWidth) << ""
+                     << setw(priceWidth) << "";
+            }
+
+            cout << " | ";
+
+            if (i < sell.size()) {
+                cout << left << setw(orderIdWidth) << sell[i].orderID
+                     << setw(qtyWidth) << sell[i].quantity
+                     << setw(priceWidth) << fixed << setprecision(2) << sell[i].price;
+            } else {
+                cout << left << setw(orderIdWidth) << ""
+                     << setw(qtyWidth) << ""
+                     << setw(priceWidth) << "";
+            }
+
+            cout << "\n";
         }
     }
 }
