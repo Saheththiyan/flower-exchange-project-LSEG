@@ -1,6 +1,10 @@
 #include  "../headers/instrumentOrderBook.hpp"
 using namespace std;
 
+OrderBook& InstrumentOrderBook::getOrderBook(const string& instrument) {
+    return books[instrument];
+}
+
 vector<string> InstrumentOrderBook::getInstruments() const {
     vector<string> instruments;
     instruments.reserve(books.size());

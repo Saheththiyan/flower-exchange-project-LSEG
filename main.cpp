@@ -33,8 +33,8 @@ int main() {
                 continue;
             }
 
-            Order working = order;
-            auto fills = instrumentOrderBook.getOrderBook(order.instrument).execute(working);
+            Order executingOrder = order;
+            auto fills = instrumentOrderBook.getOrderBook(order.instrument).execute(executingOrder);
 
             if (fills.empty()) {
                 instrumentOrderBook.getOrderBook(order.instrument).addOrder(order);
@@ -51,7 +51,7 @@ int main() {
             }
 
             for (const auto& fill : fills) {
-                ExecStatus status = (working.quantity == 0) ? ExecStatus::Fill : ExecStatus::PFill;
+                ExecStatus status = (executingOrder.quantity == 0) ? ExecStatus::Fill : ExecStatus::PFill;
 
                 rows.push_back(ExecutionReport({
                     order.orderID,
@@ -74,9 +74,9 @@ int main() {
                 }));
             }
 
-            if (working.quantity > 0) {
+            if (executingOrder.quantity > 0) {
                 Order remaining = order;
-                remaining.quantity = working.quantity;
+                remaining.quantity = executingOrder.quantity;
                 instrumentOrderBook.getOrderBook(order.instrument).addOrder(remaining);
             }
         }

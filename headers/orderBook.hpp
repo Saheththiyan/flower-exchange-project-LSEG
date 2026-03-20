@@ -22,8 +22,5 @@ public:
     vector<Order> getBuyOrders() const;
     vector<Order> getSellOrders() const;
 
-    optional<Order> match(const Order& incomingOrder);
-    optional<Order> partialMatch(const Order& incomingOrder);
-
     vector<TradeFill> execute(Order& incomingOrder);
 };

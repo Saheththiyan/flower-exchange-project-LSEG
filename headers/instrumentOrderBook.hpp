@@ -9,9 +9,7 @@ private:
     unordered_map<string, OrderBook> books;
 
 public:
-    OrderBook& getOrderBook(const string& instrument) {
-        return books[instrument];
-    }
+    OrderBook &getOrderBook(const string &instrument);
 
     vector<string> getInstruments() const;
     void printAvailableOrderBooks() const;
