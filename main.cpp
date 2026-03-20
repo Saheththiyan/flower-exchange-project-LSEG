@@ -33,76 +33,52 @@ int main() {
                 continue;
             }
 
-            auto matchedOrder = instrumentOrderBook.getOrderBook(order.instrument).match(order);
+            Order working = order;
+            auto fills = instrumentOrderBook.getOrderBook(order.instrument).execute(working);
 
-            if (matchedOrder) {
+            if (fills.empty()) {
+                instrumentOrderBook.getOrderBook(order.instrument).addOrder(order);
                 rows.push_back(ExecutionReport{
                     order.orderID,
                     order.clientOrderID,
                     order.instrument,
-                    ExecStatus::Fill,
+                    ExecStatus::New,
                     order.side,
                     order.quantity,
                     order.price
                 });
-
-                rows.push_back(ExecutionReport{
-                    matchedOrder->orderID,
-                    matchedOrder->clientOrderID,
-                    matchedOrder->instrument,
-                    ExecStatus::Fill,
-                    matchedOrder->side,
-                    matchedOrder->quantity,
-                    matchedOrder->price
-                });
                 continue;
             }
 
-            auto partialMatchedOrder = instrumentOrderBook.getOrderBook(order.instrument).partialMatch(order);
+            for (const auto& fill : fills) {
+                ExecStatus status = (working.quantity == 0) ? ExecStatus::Fill : ExecStatus::PFill;
 
-            if (partialMatchedOrder) {
-                rows.push_back(ExecutionReport{
+                rows.push_back(ExecutionReport({
                     order.orderID,
                     order.clientOrderID,
                     order.instrument,
-                    ExecStatus::PFill,
+                    status,
                     order.side,
-                    partialMatchedOrder->quantity,
-                    partialMatchedOrder->price
-                });
+                    fill.quantity,
+                    fill.price
+                }));
 
-                rows.push_back(ExecutionReport{
-                    partialMatchedOrder->orderID,
-                    partialMatchedOrder->clientOrderID,
-                    partialMatchedOrder->instrument,
+                rows.push_back(ExecutionReport({
+                    fill.restingOrder.orderID,
+                    fill.restingOrder.clientOrderID,
+                    fill.restingOrder.instrument,
                     ExecStatus::Fill,
-                    partialMatchedOrder->side,
-                    partialMatchedOrder->quantity,
-                    partialMatchedOrder->price
-                });
-
-                instrumentOrderBook.getOrderBook(order.instrument).addOrder(Order{
-                    order.orderID,
-                    order.clientOrderID,
-                    order.instrument,
-                    order.side,
-                    order.quantity - partialMatchedOrder->quantity,
-                    order.price
-                });
-                continue;
+                    fill.restingOrder.side,
+                    fill.quantity,
+                    fill.price
+                }));
             }
 
-            instrumentOrderBook.getOrderBook(order.instrument).addOrder(order);
-            rows.push_back(ExecutionReport{
-                order.orderID,
-                order.clientOrderID,
-                order.instrument,
-                ExecStatus::New,
-                order.side,
-                order.quantity,
-                order.price
-            });
-
+            if (working.quantity > 0) {
+                Order remaining = order;
+                remaining.quantity = working.quantity;
+                instrumentOrderBook.getOrderBook(order.instrument).addOrder(remaining);
+            }
         }
 
         reportWriter.writeRows(rows);

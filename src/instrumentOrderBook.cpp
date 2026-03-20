@@ -19,8 +19,8 @@ void InstrumentOrderBook::printAvailableOrderBooks() const {
     cout << "\n=== Instrument Order Books ===\n";
     for (const auto& instrument : instruments) {
         const auto& book = books.at(instrument);
-        auto buy = book.getBuyOrders();   // already desc by price
-        auto sell = book.getSellOrders(); // already asc by price
+        auto buy = book.getBuyOrders();
+        auto sell = book.getSellOrders();
 
         cout << "\nInstrument: " << instrument << "\n";
 
