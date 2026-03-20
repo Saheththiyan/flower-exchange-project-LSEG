@@ -19,6 +19,20 @@ int main() {
         for (auto order : orders) {
             order.orderID = "ord" + to_string(id++);
 
+            if (!order.reason.empty()) {
+                rows.push_back(ExecutionReport{
+                    order.orderID,
+                    order.clientOrderID,
+                    order.instrument,
+                    ExecStatus::Reject,
+                    order.side,
+                    order.quantity,
+                    order.price,
+                    order.reason
+                });
+                continue;
+            }
+
             auto matchedOrder = instrumentOrderBook.getOrderBook(order.instrument).tryMatch(order);
 
             if (matchedOrder) {

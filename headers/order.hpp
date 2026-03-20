@@ -22,6 +22,7 @@ struct Order {
     Side side;
     int quantity;
     double price;
+    string reason;
 };
 
 struct ExecutionReport {
@@ -32,4 +33,5 @@ struct ExecutionReport {
     Side side;
     int quantity;
     double price;
+    string reason;
 };

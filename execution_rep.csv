@@ -1,5 +1,4 @@
-Order ID, Cl. Ord.ID,Instrument,Side,Exec_Status,Quantity,Price
-ord1,aa13,Rose,2,New,100,55.00
-ord2,aa14,Rose,2,New,100,45.00
-ord3,aa15,Rose,1,Fill,100,45.00
-ord2,aa14,Rose,2,Fill,100,45.00
+Order ID, Cl. Ord.ID,Instrument,Side,Exec_Status,Quantity,Price,Reason
+ord1,aa13,,2,Reject,100,55.00,Invalid instrument
+ord2,aa14,Rose,2,Reject,1001,45.00,Invalid size
+ord3,aa15,Rose,2,Reject,100,45.00,Invalid side

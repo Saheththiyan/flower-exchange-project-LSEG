@@ -30,7 +30,7 @@ void ExecutionReportWriter::writeHeader() {
         throw runtime_error("Could not open file: " + filePath);
     }
 
-    file << "Order ID, Cl. Ord.ID,Instrument,Side,Exec_Status,Quantity,Price\n";
+    file << "Order ID, Cl. Ord.ID,Instrument,Side,Exec_Status,Quantity,Price,Reason\n";
 }
 
 void ExecutionReportWriter::writeRows(const vector<ExecutionReport> &rows) {
@@ -44,6 +44,7 @@ void ExecutionReportWriter::writeRows(const vector<ExecutionReport> &rows) {
             << sidetoInt(report.side) << ","
             << statustoString(report.execStatus) << ","
             << report.quantity << ","
-            << fixed << setprecision(2) << report.price << "\n";
+            << fixed << setprecision(2) << report.price << ","
+            << report.reason << "\n";
     }
 }
