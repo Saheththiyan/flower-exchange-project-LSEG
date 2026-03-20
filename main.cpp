@@ -19,6 +19,7 @@ int main() {
         for (auto order : orders) {
             order.orderID = "ord" + to_string(id++);
 
+            // If the order is invalid, we reject it immediately without attempting to execute
             if (!order.reason.empty()) {
                 rows.push_back(ExecutionReport{
                     order.orderID,
@@ -51,6 +52,7 @@ int main() {
             }
 
             for (const auto& fill : fills) {
+                // The execution status is Fill if the incoming order is completely filled, otherwise it's PFill
                 ExecStatus status = (executingOrder.quantity == 0) ? ExecStatus::Fill : ExecStatus::PFill;
 
                 rows.push_back(ExecutionReport({
@@ -63,17 +65,21 @@ int main() {
                     fill.price
                 }));
 
+                // The resting order's execution status is determined by whether it was completely filled or partially filled
+                ExecStatus restingStatus = (fill.quantity == fill.restingOrder.quantity) ? ExecStatus::Fill : ExecStatus::PFill;
+
                 rows.push_back(ExecutionReport({
                     fill.restingOrder.orderID,
                     fill.restingOrder.clientOrderID,
                     fill.restingOrder.instrument,
-                    ExecStatus::Fill,
+                    restingStatus,
                     fill.restingOrder.side,
                     fill.quantity,
                     fill.price
                 }));
             }
 
+            // If there is remaining quantity on the incoming order after attempting to execute, we add it to the book
             if (executingOrder.quantity > 0) {
                 Order remaining = order;
                 remaining.quantity = executingOrder.quantity;
@@ -82,8 +88,8 @@ int main() {
         }
 
         reportWriter.writeRows(rows);
-
         instrumentOrderBook.printAvailableOrderBooks();
+
     } catch (const exception& ex) {
         cerr << "Error: " << ex.what() << endl;
         return 1;

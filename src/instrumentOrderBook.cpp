@@ -2,10 +2,12 @@
 using namespace std;
 
 OrderBook& InstrumentOrderBook::getOrderBook(const string& instrument) {
+    // Creates a new order book if it doesn't exist, otherwise returns the existing one
     return books[instrument];
 }
 
 vector<string> InstrumentOrderBook::getInstruments() const {
+    // This function returns a sorted list of instruments for which we have order books
     vector<string> instruments;
     instruments.reserve(books.size());
 
