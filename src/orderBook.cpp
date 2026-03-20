@@ -26,7 +26,7 @@ vector<Order> OrderBook::getSellOrders() const {
     return out;
 }
 
-optional<Order> OrderBook::tryMatch(const Order& incomingOrder) {
+optional<Order> OrderBook::match(const Order& incomingOrder) {
 
     if (incomingOrder.side == Side::BUY) {
         auto levelIt = sellOrders.find(incomingOrder.price);
@@ -62,5 +62,43 @@ optional<Order> OrderBook::tryMatch(const Order& incomingOrder) {
         }
     }
 
+    return nullopt;
+}
+
+optional<Order> OrderBook::partialMatch(const Order& incomingOrder) {
+    
+    if (incomingOrder.side == Side::BUY) {
+        auto levelIt = sellOrders.find(incomingOrder.price);
+        if (levelIt == sellOrders.end())
+            return nullopt;
+
+        auto& queue = levelIt->second;
+        for (auto it = queue.begin(); it != queue.end(); ++it) {
+            if (it->quantity < incomingOrder.quantity) {
+                Order matched = *it;
+                queue.erase(it);
+                if (queue.empty()) {
+                    sellOrders.erase(levelIt);
+                }
+                return matched;
+            }
+        }
+    } else {
+        auto levelIt = buyOrders.find(incomingOrder.price);
+        if (levelIt == buyOrders.end())
+            return nullopt;
+
+        auto& queue = levelIt->second;
+        for (auto it = queue.begin(); it != queue.end(); ++it) {
+            if (it->quantity < incomingOrder.quantity) {
+                Order matched = *it;
+                queue.erase(it);
+                if (queue.empty()) {
+                    buyOrders.erase(levelIt);
+                }
+                return matched;
+            }
+        }
+    }
     return nullopt;
 }

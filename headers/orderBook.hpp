@@ -14,5 +14,6 @@ public:
 
     vector<Order> getBuyOrders() const;
     vector<Order> getSellOrders() const;
-    optional<Order> tryMatch(const Order& incomingOrder);
+    optional<Order> match(const Order& incomingOrder);
+    optional<Order> partialMatch(const Order& incomingOrder);
 };

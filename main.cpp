@@ -33,7 +33,7 @@ int main() {
                 continue;
             }
 
-            auto matchedOrder = instrumentOrderBook.getOrderBook(order.instrument).tryMatch(order);
+            auto matchedOrder = instrumentOrderBook.getOrderBook(order.instrument).match(order);
 
             if (matchedOrder) {
                 rows.push_back(ExecutionReport{
@@ -55,20 +55,54 @@ int main() {
                     matchedOrder->quantity,
                     matchedOrder->price
                 });
-            } else {    
+                continue;
+            }
 
-                instrumentOrderBook.getOrderBook(order.instrument).addOrder(order);
+            auto partialMatchedOrder = instrumentOrderBook.getOrderBook(order.instrument).partialMatch(order);
+
+            if (partialMatchedOrder) {
                 rows.push_back(ExecutionReport{
                     order.orderID,
                     order.clientOrderID,
                     order.instrument,
-                    ExecStatus::New,
+                    ExecStatus::PFill,
                     order.side,
-                    order.quantity,
-                    order.price
+                    partialMatchedOrder->quantity,
+                    partialMatchedOrder->price
                 });
 
+                rows.push_back(ExecutionReport{
+                    partialMatchedOrder->orderID,
+                    partialMatchedOrder->clientOrderID,
+                    partialMatchedOrder->instrument,
+                    ExecStatus::Fill,
+                    partialMatchedOrder->side,
+                    partialMatchedOrder->quantity,
+                    partialMatchedOrder->price
+                });
+
+                instrumentOrderBook.getOrderBook(order.instrument).addOrder(Order{
+                    order.orderID,
+                    order.clientOrderID,
+                    order.instrument,
+                    order.side,
+                    order.quantity - partialMatchedOrder->quantity,
+                    order.price
+                });
+                continue;
             }
+
+            instrumentOrderBook.getOrderBook(order.instrument).addOrder(order);
+            rows.push_back(ExecutionReport{
+                order.orderID,
+                order.clientOrderID,
+                order.instrument,
+                ExecStatus::New,
+                order.side,
+                order.quantity,
+                order.price
+            });
+
         }
 
         reportWriter.writeRows(rows);
