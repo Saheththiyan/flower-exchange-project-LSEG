@@ -1,4 +1,4 @@
-#include "InputValidator.h"
+#include "headers/InputValidator.h"
 
 Instrument InputValidator::stringToInstrument(const std::string& flower) {
     if (flower == "Rose") return Instrument::ROSE; 

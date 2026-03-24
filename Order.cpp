@@ -1,8 +1,9 @@
-#include "Order.h"
+#include "headers/Order.h"
 
-Order::Order(std::string clientOrderID, Instrument instrument, int side, int quantity, double price)
+Order::Order(std::string clientOrderID, std::string orderID, Instrument instrument, int side, int quantity, double price)
 {
     this->clientOrderID = clientOrderID;
+    this->orderID = orderID;
     this->instrument = instrument;
     this->side = side;
     this->quantity = quantity;
@@ -11,6 +12,10 @@ Order::Order(std::string clientOrderID, Instrument instrument, int side, int qua
 
 std::string Order::getClientOrderID() const { 
     return clientOrderID; 
+}
+
+std::string Order::getOrderID() const {
+    return orderID;
 }
 
 Instrument Order::getInstrument() const { 
