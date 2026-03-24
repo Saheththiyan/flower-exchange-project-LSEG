@@ -56,7 +56,7 @@ ValidatedInput InputValidator::validate(const std::vector<std::string>& row) {
     }
     res.quantity = quantity;
 
-    int price = std::stod(row[4]);
+    double price = std::stod(row[4]);
     if (price <= 0.0) { 
         res.isValid = false;
         res.rejectReason = "Invalid price"; 
