@@ -17,9 +17,9 @@ struct ValidatedInput {
 
 class InputValidator {
 public:
-    static ValidatedInput validate(const std::vector<std::string>& row);
+    static ValidatedInput validate(const std::vector<std::string>& row);   //can get validated input and status together
 private:
-    static Instrument stringToInstrument(const std::string& str);
+    static Instrument stringToInstrument(const std::string& str);  // convert string input to enum
 };
 
 #endif

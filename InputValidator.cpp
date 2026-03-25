@@ -1,32 +1,20 @@
 #include "headers/InputValidator.h"
 
 Instrument InputValidator::stringToInstrument(const std::string& flower) {
-    if (flower == "Rose") return Instrument::ROSE; 
-    if (flower == "Lavender") return Instrument::LAVENDER; 
-    if (flower == "Lotus") return Instrument::LOTUS; 
-    if (flower == "Tulip") return Instrument::TULIP; 
-    if (flower == "Orchid") return Instrument::ORCHID; 
+    if (flower== "Rose") return Instrument::ROSE; 
+    if (flower== "Lavender") return Instrument::LAVENDER; 
+    if (flower== "Lotus") return Instrument::LOTUS; 
+    if (flower== "Tulip") return Instrument::TULIP; 
+    if (flower== "Orchid") return Instrument::ORCHID; 
     return Instrument::INVALID;
 }
 
+//funtion to validate input and give relevant rejection msg
 ValidatedInput InputValidator::validate(const std::vector<std::string>& row) {
     ValidatedInput res;
     res.isValid = true;
 
-    if (row.size() < 5) {
-        res.isValid = false;
-        res.rejectReason = "Required fields not available"; 
-        return res;
-    }
-
-    for (const auto& field : row) {
-        if (field.empty()) {
-            res.isValid = false;
-            res.rejectReason = "Required fields not available"; 
-        }
-    }
-
-    if (row[0].length() > 8) { 
+    if (row[0].empty() || row[0].length() >= 8) {
         res.isValid = false;
         res.rejectReason = "Invalid client order ID";
         return res;
@@ -34,36 +22,68 @@ ValidatedInput InputValidator::validate(const std::vector<std::string>& row) {
     res.clientOrderID = row[0];
 
     res.instrument = stringToInstrument(row[1]);
-    if (res.instrument == Instrument::INVALID) { 
+    if (res.instrument == Instrument::INVALID) {
         res.isValid = false;
-        res.rejectReason = "Invalid instrument"; 
+        res.rejectReason = "Invalid instrument";
         return res;
     }
 
-    int side = std::stoi(row[2]);
-    if (side != 1 && side != 2) { 
+    if (row[2].empty()) {
         res.isValid = false;
-        res.rejectReason = "Invalid side"; 
+        res.rejectReason = "Invalid side";
         return res;
     }
-    res.side = side;
+    try {
+        int side = std::stoi(row[2]);
+        if (side != 1 && side != 2) {
+            res.isValid = false;
+            res.rejectReason = "Invalid side";
+            return res;
+        }
+        res.side = side;
+    } catch (const std::exception&) {
+        res.isValid = false;
+        res.rejectReason = "Invalid side";
+        return res;
+    }
 
-    int quantity = std::stoi(row[3]);
-    if (quantity % 10 != 0 || quantity < 10 || quantity > 1000) { 
+    if (row[3].empty()) {
         res.isValid = false;
-        res.rejectReason = "Invalid quantity"; 
+        res.rejectReason = "Invalid size";
         return res;
     }
-    res.quantity = quantity;
+    try {
+        int quantity = std::stoi(row[3]);  //string to int conversion
+        if (quantity % 10 != 0 || quantity < 10 || quantity >= 1000) {
+            res.isValid = false;
+            res.rejectReason = "Invalid size";
+            return res;
+        }
+        res.quantity = quantity;
+    } catch (const std::exception&) {
+        res.isValid = false;
+        res.rejectReason = "Invalid size";
+        return res;
+    }
 
-    double price = std::stod(row[4]);
-    if (price <= 0.0) { 
+    if (row[4].empty()) {
         res.isValid = false;
-        res.rejectReason = "Invalid price"; 
+        res.rejectReason = "Invalid price";
         return res;
     }
-    res.price = price;
+    try {
+        double price = std::stod(row[4]);  //string to double conversion
+        if (price <= 0.0) {
+            res.isValid = false;
+            res.rejectReason = "Invalid price";
+            return res;
+        }
+        res.price = price;
+    } catch (const std::exception&) {
+        res.isValid = false;
+        res.rejectReason = "Invalid price";
+        return res;
+    }
 
     return res;
 }
-

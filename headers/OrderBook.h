@@ -1,7 +1,7 @@
 #ifndef ORDERBOOK_H
 #define ORDERBOOK_H
 
-#include <list>
+#include <deque>  //double ended queue good for deletion and insertion at both ends than a list
 #include <string>
 #include <vector>
 #include "Order.h"
@@ -10,9 +10,9 @@
 
 class OrderBook {
 private:
-    std::list<Order> buySide;   
-    std::list<Order> sellSide;  
-    Instrument instrument;
+    std::deque<Order> buySide;
+    std::deque<Order> sellSide;
+    Instrument instrument;   //orderbook per flower type
 
     void insertBuy(const Order& order);
     void insertSell(const Order& order);
@@ -20,11 +20,10 @@ private:
 public:
     OrderBook(Instrument inst);
 
-    std::vector<ExecutionReport> processOrder(const Order& order);
-    void cancelOrder(const std::string& clientOrderID);
+    std::vector<ExecutionReport> matchOrders(Order incoming, const std::string& eventTimestamp);
 
-    const std::list<Order>& getBuySide() const;
-    const std::list<Order>& getSellSide() const;
+    const std::deque<Order>& getBuySide() const;
+    const std::deque<Order>& getSellSide() const;
 };
 
 #endif

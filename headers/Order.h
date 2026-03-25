@@ -4,17 +4,17 @@
 #include <string>
 #include "Constants.h"
 
-class Order {
-private:
+class Order {           //represents single order read by a csv row
+private:               
     std::string clientOrderID;
-    std::string orderID;
+    std::string orderID;    //internally generated unique ID also stored in Order object
     Instrument instrument;
     int side;
     int quantity;
     double price;
 
 public:
-    Order(std::string clID, std::string ordID, Instrument instruent, int side, int quantity, double price);
+    Order(std::string clientOrderID, std::string orderID, Instrument instrument, int side, int quantity, double price);
 
     std::string getClientOrderID() const;
     std::string getOrderID() const;

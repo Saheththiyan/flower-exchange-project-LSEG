@@ -1,8 +1,8 @@
 #ifndef EXCHANGE_H
 #define EXCHANGE_H
 
+#include <array>
 #include <string>
-#include <map>
 #include <vector>
 #include "OrderBook.h"
 #include "ExecutionReport.h"
@@ -10,9 +10,10 @@
 
 class Exchange {
 private:
-    std::map<std::string, OrderBook> orderBooks;
-    int currentOrderIdCounter;
+    std::array<OrderBook, 5> orderBooks;
+    int orderCounter;
     std::string generateOrderID();
+    static std::size_t instrumentToIndex(Instrument instrument);
 
 public:
     Exchange();

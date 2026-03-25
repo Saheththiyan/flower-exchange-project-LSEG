@@ -5,10 +5,6 @@
 #include <ctime>
 #include "Constants.h"
 
-enum class Status {
-    NEW, PARTIAL_FILL, FILL, CANCELLED, REJECTED
-};
-
 class ExecutionReport {
 private:
     std::string clientOrderID;
@@ -23,7 +19,17 @@ private:
 
 
 public:
-    ExecutionReport(std::string clID, std::string ordID, Instrument instrument, int side, int quantity, double price);
+    ExecutionReport(              //report constructor
+        std::string clientOrderID,
+        std::string orderID,
+        Instrument instrument,
+        int side,
+        int quantity,
+        double price,               //reason not in constructor as it is not compulsory
+        const std::string& reportTimestamp = ""
+    );
+
+    static std::string createTimestamp();        //can use without an instance/object
 
     std::string getClientOrderID() const;
     std::string getOrderID() const;
@@ -34,9 +40,10 @@ public:
     Status getStatus() const;
     void setQuantity(int newQty);
     void setStatus(Status newStatus);
+    void setTimestamp(const std::string& newTimestamp) { timestamp = newTimestamp; }
     std::string getRejectReason() const { return rejectReason; }
     std::string getTimestamp() const { return timestamp; }
-    void setRejectReason(const std::string& reason) { rejectReason = reason; }
+    void setRejectReason(const std::string& reason) { rejectReason = reason; }   //using pass by reference to avoid copying
 };
 
 #endif

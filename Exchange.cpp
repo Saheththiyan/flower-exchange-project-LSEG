@@ -1,9 +1,9 @@
 #include "headers/Exchange.h"
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <vector>
 #include <iomanip>
+#include <utility>
 
 namespace {
 std::string instrumentToString(Instrument instrument) {
@@ -16,123 +16,133 @@ std::string instrumentToString(Instrument instrument) {
         default: return "Invalid";
     }
 }
+
+bool parser(const std::string& line, std::string fields[5]) {
+    std::size_t start = 0;
+    for (int i = 0; i < 4; ++i) {
+        const std::size_t comma = line.find(',', start);
+        if (comma == std::string::npos) {
+            return false;
+        }
+        fields[i] = line.substr(start, comma - start);
+        start = comma + 1;
+    }
+    fields[4] = line.substr(start);
+    return true;
+}
 }
 
-// Constructor: Initialize the order ID counter and the 5 specific order books 
-Exchange::Exchange() {
-    currentOrderIdCounter = 1;
-    
-    // Initialize the 5 required instruments [cite: 64, 68]
-    orderBooks.emplace("Rose", OrderBook(Instrument::ROSE));
-    orderBooks.emplace("Lavender", OrderBook(Instrument::LAVENDER));
-    orderBooks.emplace("Lotus", OrderBook(Instrument::LOTUS));
-    orderBooks.emplace("Tulip", OrderBook(Instrument::TULIP));
-    orderBooks.emplace("Orchid", OrderBook(Instrument::ORCHID));
+
+Exchange::Exchange()
+    : orderBooks{               //orderbooks per instrument
+        OrderBook(Instrument::ROSE),
+        OrderBook(Instrument::LAVENDER),
+        OrderBook(Instrument::LOTUS),
+        OrderBook(Instrument::TULIP),
+        OrderBook(Instrument::ORCHID)
+      },
+      orderCounter(1) {}
+
+std::size_t Exchange::instrumentToIndex(Instrument instrument) {
+    switch (instrument) {
+        case Instrument::ROSE: return 0;
+        case Instrument::LAVENDER: return 1;
+        case Instrument::LOTUS: return 2;
+        case Instrument::TULIP: return 3;
+        case Instrument::ORCHID: return 4;
+        default: return 5; // Invalid index
+    }
 }
 
-// Helper to generate IDs like "ord1", "ord2", etc. [cite: 53]
+//generate orderIDs
 std::string Exchange::generateOrderID() {
-    return "ord" + std::to_string(currentOrderIdCounter++);
+    return "ord" + std::to_string(orderCounter++);
 }
 
-// Helper to convert Status enum to string for the CSV output
 std::string statusToString(Status status) {
     switch (status) {
         case Status::NEW: return "New";
         case Status::REJECTED: return "Rejected";
         case Status::FILL: return "Fill";
         case Status::PARTIAL_FILL: return "Pfill";
-        case Status::CANCELLED: return "Cancelled";
         default: return "Unknown";
     }
 }
 
-// The main processing pipeline
+
 void Exchange::processOrders(const std::string& inputFileName, const std::string& outputFileName) {
     std::ifstream inputFile(inputFileName);
     std::ofstream outputFile(outputFileName);
 
+    //handle file opening errors
     if (!inputFile.is_open()) {
-        std::cerr << "Error: Could not open input file: " << inputFileName << std::endl;
+        std::cerr << "Error: Could not open input file: " << inputFileName << '\n';
         return;
     }
     if (!outputFile.is_open()) {
-        std::cerr << "Error: Could not open output file: " << outputFileName << std::endl;
+        std::cerr << "Error: Could not open output file: " << outputFileName << '\n';
         return;
     }
 
-    // Write the header for the execution report [cite: 68]
     outputFile << "Order ID,Client Order ID,Instrument,Side,Exec Status,Quantity,Price,Reason,Transaction Time\n";
 
     std::string line;
     bool isHeader = true;
 
-    // Read the input CSV line by line
+    
     while (std::getline(inputFile, line)) {
-        // Skip the header row of the input file
         if (isHeader) {
             isHeader = false;
             continue;
         }
 
-        // Handle empty lines gracefully
-        if (line.empty() || line.find_first_not_of(" \r\n\t") == std::string::npos) {
+        std::string fields[5];
+        if (!parser(line, fields)) {   //use parser to get 5 values of the fields in an order
             continue;
         }
+        std::string& clOrdId = fields[0];
+        std::string& instrumentStr = fields[1];
+        std::string& sideStr = fields[2];
+        std::string& qtyStr = fields[3];
+        std::string& priceStr = fields[4];
+        const std::string eventTimestamp = ExecutionReport::createTimestamp();
 
-        std::stringstream ss(line);
-        std::string clOrdId, instrumentStr, sideStr, qtyStr, priceStr;
-
-        // Parse the CSV fields [cite: 29, 30]
-        std::getline(ss, clOrdId, ',');
-        std::getline(ss, instrumentStr, ',');
-        std::getline(ss, sideStr, ',');
-        std::getline(ss, qtyStr, ',');
-        std::getline(ss, priceStr, ',');
-
-        // 1. Validation Phase [cite: 247-253]
+        //use innput validation
         std::vector<std::string> row{clOrdId, instrumentStr, sideStr, qtyStr, priceStr};
         ValidatedInput validated;
         try {
             validated = InputValidator::validate(row);
         } catch (const std::exception&) {
             validated.isValid = false;
-            validated.rejectReason = "Invalid numeric format";
-            validated.clientOrderID = clOrdId;
-            validated.instrument = Instrument::INVALID;
-            validated.side = 0;
-            validated.quantity = 0;
-            validated.price = 0.0;
         }
 
         if (!validated.isValid) {
-            // Generate a Rejected report [cite: 254]
             std::string newOrdId = generateOrderID();
             ExecutionReport rejectReport(
                 clOrdId,
                 newOrdId,
-                validated.instrument,
-                validated.side,
-                validated.quantity,
-                validated.price
+                Instrument::ROSE,
+                1,
+                0,
+                0.0,   //filler values for rejected orders
+                eventTimestamp
             );
             rejectReport.setStatus(Status::REJECTED);
             rejectReport.setRejectReason(validated.rejectReason);
 
-            // Write rejection immediately
+            //writing the rejected row error to ouput file
             outputFile << rejectReport.getOrderID() << ","
                        << rejectReport.getClientOrderID() << ","
-                       << instrumentToString(rejectReport.getInstrument()) << ","
-                       << rejectReport.getSide() << ","
+                       << instrumentStr << ","
+                       << sideStr << ","
                        << statusToString(rejectReport.getStatus()) << ","
-                       << rejectReport.getQuantity() << ","
-                       << std::fixed << std::setprecision(2) << rejectReport.getPrice() << ","
+                       << qtyStr << ","
+                       << priceStr<< ","
                        << rejectReport.getRejectReason() << ","
                        << rejectReport.getTimestamp() << "\n";
             continue; 
         }
 
-        // 2. Order Creation & Routing
         std::string newOrdId = generateOrderID();
         Order newOrder(
             validated.clientOrderID,
@@ -143,26 +153,23 @@ void Exchange::processOrders(const std::string& inputFileName, const std::string
             validated.price
         );
 
-        // Pass the order to the correct OrderBook.
-        auto orderBookIt = orderBooks.find(instrumentStr);
-        if (orderBookIt != orderBooks.end()) {
-            std::vector<ExecutionReport> reports = orderBookIt->second.processOrder(newOrder);
+        std::vector<ExecutionReport> reports = orderBooks[instrumentToIndex(validated.instrument)]
+            .matchOrders(std::move(newOrder), eventTimestamp);
 
-            // 3. Output Phase
-            for (const auto& report : reports) {
-                outputFile << report.getOrderID() << ","
-                           << report.getClientOrderID() << ","
-                           << instrumentToString(report.getInstrument()) << ","
-                           << report.getSide() << ","
-                           << statusToString(report.getStatus()) << ","
-                           << report.getQuantity() << ","
-                           << std::fixed << std::setprecision(2) << report.getPrice() << ","
-                           << report.getRejectReason() << ","
-                           << report.getTimestamp() << "\n";
-            }
+            //write to putput file th valid roders
+        for (const auto& report : reports) {
+            outputFile << report.getOrderID() << ","
+                       << report.getClientOrderID() << ","
+                       << instrumentToString(report.getInstrument()) << ","
+                       << report.getSide() << ","
+                       << statusToString(report.getStatus()) << ","
+                       << report.getQuantity() << ","
+                       << std::fixed << std::setprecision(2) << report.getPrice() << ","
+                       << report.getRejectReason() << ","
+                       << report.getTimestamp() << "\n";
         }
     }
-
+//close all opened files
     inputFile.close();
     outputFile.close();
 }

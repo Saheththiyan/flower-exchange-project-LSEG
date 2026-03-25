@@ -10,6 +10,7 @@ Order::Order(std::string clientOrderID, std::string orderID, Instrument instrume
     this->price = price;
 }
 
+//getters and setters for order
 std::string Order::getClientOrderID() const { 
     return clientOrderID; 
 }

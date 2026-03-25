@@ -1,30 +1,46 @@
 #include "headers/ExecutionReport.h"
-#include <chrono>
-#include <iomanip>
+#include <chrono>   //for time tracking 
+#include <iomanip>  //io manipulation for setfill('0') set precision 
 #include <sstream>
 
-std::string generateTimestamp() {
+std::string ExecutionReport::createTimestamp() {
     auto now = std::chrono::system_clock::now();
-    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
-    auto timer = std::chrono::system_clock::to_time_t(now);
+
+    auto m_sec = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;  //time_since_epoch jan 1st 1970 
+
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+
     
-    std::tm bt = *std::localtime(&timer);
-    std::ostringstream oss;
+    std::tm *tm = std::localtime(&t);
+    std::stringstream ss;
     
-    oss << std::put_time(&bt, "%Y%m%d-%H%M%S");
-    oss << '.' << std::setfill('0') << std::setw(3) << ms.count();
+    ss << std::put_time(tm, "%Y%m%d-%H%M%S");  //use stringstream to get the output format needed
+    ss << '.' << std::setfill('0') << std::setw(3) << m_sec.count();
     
-    return oss.str();
+    return ss.str(); 
 }
 
-ExecutionReport::ExecutionReport(std::string clID, std::string ordID, Instrument instrument, int side, int quantity, double price)
-    : clientOrderID(clID), orderID(ordID), instrument(instrument), side(side), quantity(quantity), price(price) 
-{
+ExecutionReport::ExecutionReport(
+    std::string clientOrderID,
+    std::string orderID,
+    Instrument instrument,
+    int side,
+    int quantity,
+    double price,
+    const std::string& reportTimestamp
+) {
+    this->clientOrderID = clientOrderID;
+    this->orderID = orderID;
+    this->instrument = instrument;
+    this->side = side;
+    this->quantity = quantity;
+    this->price = price;
     this->status = Status::NEW;
     this->rejectReason = "";
-    this->timestamp = generateTimestamp();
+    this->timestamp = reportTimestamp.empty() ? ExecutionReport::createTimestamp() : reportTimestamp; //if empty create timestamp using before function
 }
 
+//getters and setters for execution report
 std::string ExecutionReport::getClientOrderID() const { return clientOrderID; }
 std::string ExecutionReport::getOrderID() const { return orderID; }
 Instrument ExecutionReport::getInstrument() const { return instrument; }

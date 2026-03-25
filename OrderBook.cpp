@@ -1,77 +1,87 @@
 #include "headers/OrderBook.h"
+#include <algorithm>  //to get min function
 
 OrderBook::OrderBook(Instrument inst) : instrument(inst) {}
 
-std::vector<ExecutionReport> OrderBook::processOrder(const Order& order) {
+std::vector<ExecutionReport> OrderBook::matchOrders(Order in, const std::string& eventTimestamp) {
     std::vector<ExecutionReport> reports;
-    Order incoming = order;
+    reports.reserve(4);
     bool hadMatch = false;
 
-    std::list<Order>& oppositeSide = (incoming.getSide() == 1) ? sellSide : buySide;
+    std::deque<Order>& opp = (in.getSide() == 1) ? sellSide : buySide;  //if we in buy order we have to check sell side of book
 
-    while (!oppositeSide.empty() && incoming.getQuantity() > 0) {
-        Order& resting = oppositeSide.front();
+    while (!opp.empty()) {
+        Order& top = opp.front();
 
-        const bool crossed = (incoming.getSide() == 1)
-            ? (incoming.getPrice() >= resting.getPrice())
-            : (incoming.getPrice() <= resting.getPrice());
+        bool crossed = false;
 
-        if (!crossed) {
-            break;
-        }
+        if (in.getSide() == 1) {  // BUY
+            if (in.getPrice() >= top.getPrice()) {
+                crossed = true;
+            }
+        } else {                  // SELL
+            if (in.getPrice() <= top.getPrice()) {
+                crossed = true;
+            }
+        }  //buying price should be greter than selling price for a trade
+
+        if (!crossed) break;
 
         hadMatch = true;
 
-        const int fillQty = std::min(incoming.getQuantity(), resting.getQuantity());
-        const double executionPrice = resting.getPrice();
+        const int fillQty = std::min(in.getQuantity(), top.getQuantity());
+        const double executionPrice = top.getPrice();
 
-        ExecutionReport aggressiveReport(
-            incoming.getClientOrderID(),
-            incoming.getOrderID(),
-            incoming.getInstrument(),
-            incoming.getSide(),
+//two emplaces for both buy and sell side reports
+
+        reports.emplace_back(           //use emplace_back instead of push_back to avaoid unnecessary copying
+            in.getClientOrderID(),
+            in.getOrderID(),
+            in.getInstrument(),
+            in.getSide(),
             fillQty,
-            executionPrice
+            executionPrice,
+            eventTimestamp
         );
-        aggressiveReport.setStatus((fillQty == incoming.getQuantity()) ? Status::FILL : Status::PARTIAL_FILL);
-        reports.push_back(aggressiveReport);
+        reports.back().setStatus((fillQty == in.getQuantity()) ? Status::FILL : Status::PARTIAL_FILL);  //if input qty same as exeuted qty as here its fill else pfill
 
-        ExecutionReport passiveReport(
-            resting.getClientOrderID(),
-            resting.getOrderID(),
-            resting.getInstrument(),
-            resting.getSide(),
+        reports.emplace_back(
+            top.getClientOrderID(),
+            top.getOrderID(),
+            top.getInstrument(),
+            top.getSide(),
             fillQty,
-            executionPrice
+            executionPrice,
+            eventTimestamp
         );
-        passiveReport.setStatus((fillQty == resting.getQuantity()) ? Status::FILL : Status::PARTIAL_FILL);
-        reports.push_back(passiveReport);
+        reports.back().setStatus((fillQty == top.getQuantity()) ? Status::FILL : Status::PARTIAL_FILL);
 
-        incoming.setQuantity(incoming.getQuantity() - fillQty);
-        resting.setQuantity(resting.getQuantity() - fillQty);
+        //update new qty
+        in.setQuantity(in.getQuantity() - fillQty);
+        top.setQuantity(top.getQuantity() - fillQty);
 
-        if (resting.getQuantity() == 0) {
-            oppositeSide.pop_front();
+        if (top.getQuantity() == 0) { //remove if fully filled
+            opp.pop_front();
         }
     }
 
-    if (incoming.getQuantity() > 0) {
-        if (incoming.getSide() == 1) {
-            insertBuy(incoming);
+    if (in.getQuantity() > 0) {
+        if (in.getSide() == 1) {  //if not fill,pfill then its a New order
+            insertBuy(in);
         } else {
-            insertSell(incoming);
+            insertSell(in);
         }
         if (!hadMatch) {
-            ExecutionReport newReport(
-                incoming.getClientOrderID(),
-                incoming.getOrderID(),
-                incoming.getInstrument(),
-                incoming.getSide(),
-                incoming.getQuantity(),
-                incoming.getPrice()
+            reports.emplace_back(
+                in.getClientOrderID(),
+                in.getOrderID(),
+                in.getInstrument(),
+                in.getSide(),
+                in.getQuantity(),
+                in.getPrice(),
+                eventTimestamp
             );
-            newReport.setStatus(Status::NEW);
-            reports.push_back(newReport);
+            reports.back().setStatus(Status::NEW);
         }
     }
 
@@ -91,26 +101,12 @@ void OrderBook::insertSell(const Order& order) {
         ++i;
     sellSide.insert(i, order);
 }
-void OrderBook::cancelOrder(const std::string& clientOrderID) {
-    for (auto it = buySide.begin(); it != buySide.end(); ++it) {
-        if (it->getClientOrderID() == clientOrderID) {
-            buySide.erase(it);
-            return;
-        }
-    }
 
-    for (auto it = sellSide.begin(); it != sellSide.end(); ++it) {
-        if (it->getClientOrderID() == clientOrderID) {
-            sellSide.erase(it);
-            return;
-        }
-    }
-}
 
-const std::list<Order>& OrderBook::getBuySide() const {
+const std::deque<Order>& OrderBook::getBuySide() const {
     return buySide;
 }
 
-const std::list<Order>& OrderBook::getSellSide() const {
+const std::deque<Order>& OrderBook::getSellSide() const {
     return sellSide;
 }
