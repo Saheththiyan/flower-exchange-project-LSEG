@@ -10,7 +10,7 @@ std::vector<ExecutionReport> OrderBook::matchOrders(Order in, const std::string&
 
     std::deque<Order>& opp = (in.getSide() == 1) ? sellSide : buySide;  //if we in buy order we have to check sell side of book
 
-    while (!opp.empty()) {
+    while (!opp.empty() && in.getQuantity() > 0) {
         Order& top = opp.front();
 
         bool crossed = false;
