@@ -19,7 +19,7 @@ bool CSVOrderReader::isHeader(const vector<string>& fields) {
     return !fields.empty() && fields[0] == "Cl. Ord.ID";
 }
 
-Order CSVOrderReader::parseOrder(const vector<string>& fields, size_t lineNumber) {
+Order CSVOrderReader::parseOrder(const vector<string>& fields, [[maybe_unused]] size_t lineNumber) {
     // This function validates the fields and constructs an Order object
     // If any validation fails, it sets the reason field of the Order to indicate the error
     string reason;
@@ -39,7 +39,7 @@ Order CSVOrderReader::parseOrder(const vector<string>& fields, size_t lineNumber
 
     int quantity = stoi(fields[3]);
     double price = stod(fields[4]);
-    if (quantity < 10 || quantity > 1000 && reason.empty()) {
+    if ((quantity < 10 || quantity > 1000) && reason.empty()) {
         reason = "Invalid size";
     }
 

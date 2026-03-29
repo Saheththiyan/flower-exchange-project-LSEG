@@ -46,7 +46,8 @@ int main() {
                     ExecStatus::New,
                     order.side,
                     order.quantity,
-                    order.price
+                    order.price,
+                    ""
                 });
                 continue;
             }
@@ -62,7 +63,8 @@ int main() {
                     status,
                     order.side,
                     fill.quantity,
-                    fill.price
+                    fill.price,
+                    ""
                 }));
 
                 // The resting order's execution status is determined by whether it was completely filled or partially filled
@@ -75,7 +77,8 @@ int main() {
                     restingStatus,
                     fill.restingOrder.side,
                     fill.quantity,
-                    fill.price
+                    fill.price,
+                    ""
                 }));
             }
 
