@@ -20,11 +20,12 @@ bool CSVOrderReader::isHeader(const vector<string>& fields) {
 }
 
 Order CSVOrderReader::parseOrder(const vector<string>& fields, [[maybe_unused]] size_t lineNumber) {
-    // This function validates the fields and constructs an Order object
-    // If any validation fails, it sets the reason field of the Order to indicate the error
+    // Validate and construct an Order object. Any malformed input is converted
+    // to a rejectable order instead of throwing and stopping the entire run.
     string reason;
-    if (fields.size() != 5 && reason.empty()) {
-        reason = "Invalid number of fields";
+
+    if (fields.size() != 5) {
+        return Order{"", fields.empty() ? "" : fields[0], "", Side::BUY, 0, 0.0, "Invalid number of fields"};
     }
 
     static const unordered_set<string> allowed = {"Rose", "Lavender", "Tulip", "Lotus", "Orchid"};
@@ -32,22 +33,44 @@ Order CSVOrderReader::parseOrder(const vector<string>& fields, [[maybe_unused]] 
         reason = "Invalid instrument";
     }
 
-    int sideValue = stoi(fields[2]);
+    int sideValue = 1;
+    int quantity = 0;
+    double price = 0.0;
+
+    try {
+        sideValue = stoi(fields[2]);
+    } catch (...) {
+        if (reason.empty()) {
+            reason = "Invalid side";
+        }
+    }
     if (sideValue != 1 && sideValue != 2 && reason.empty()) {
         reason = "Invalid side";
     }
 
-    int quantity = stoi(fields[3]);
-    double price = stod(fields[4]);
+    try {
+        quantity = stoi(fields[3]);
+    } catch (...) {
+        if (reason.empty()) {
+            reason = "Invalid size";
+        }
+    }
     if ((quantity < 10 || quantity > 1000) && reason.empty()) {
         reason = "Invalid size";
     }
 
+    try {
+        price = stod(fields[4]);
+    } catch (...) {
+        if (reason.empty()) {
+            reason = "Invalid price";
+        }
+    }
     if (price <= 0 && reason.empty()) {
         reason = "Invalid price";
     }
 
-    return Order{"",fields[0], fields[1], sideValue == 1 ? Side::BUY : Side::SELL, quantity, price, reason};
+    return Order{"", fields[0], fields[1], sideValue == 1 ? Side::BUY : Side::SELL, quantity, price, reason};
 }
 
 vector<Order> CSVOrderReader::readOrders() {
