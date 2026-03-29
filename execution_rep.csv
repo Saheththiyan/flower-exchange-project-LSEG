@@ -7,3 +7,7 @@ ord3,aa15,Rose,2,PFill,100,55.00,
 ord1,aa13,Rose,1,Fill,100,55.00,
 ord4,aa16,Rose,1,Fill,100,1.00,
 ord3,aa15,Rose,2,Fill,100,1.00,
+ord5,aa17,Lavender,1,Reject,5,20.00,Invalid size
+ord6,aa18,Tomato,2,Reject,100,5.00,Invalid instrument
+ord7,aa19,Rose,2,Reject,100,10.00,Invalid side
+ord8,aa20,Orchid,1,Reject,200,-100.00,Invalid price
