@@ -4,11 +4,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
     try {
-        CSVOrderReader reader("order.csv");
+        string inputFile = (argc > 1) ? argv[1] : "order.csv";
+        CSVOrderReader reader(inputFile);
         InstrumentOrderBook instrumentOrderBook;
-        ExecutionReportWriter reportWriter("execution_rep.csv");
+        ExecutionReportWriter reportWriter("execution_rep_ex7.csv");
 
         const auto orders = reader.readOrders();
         reportWriter.writeHeader();
@@ -52,9 +53,12 @@ int main() {
                 continue;
             }
 
+            int incomingRemaining = order.quantity;
+
             for (const auto& fill : fills) {
+                incomingRemaining -= fill.quantity;
                 // The execution status is Fill if the incoming order is completely filled, otherwise it's PFill
-                ExecStatus status = (executingOrder.quantity == 0) ? ExecStatus::Fill : ExecStatus::PFill;
+                ExecStatus status = (incomingRemaining == 0) ? ExecStatus::Fill : ExecStatus::PFill;
 
                 rows.push_back(ExecutionReport({
                     order.orderID,

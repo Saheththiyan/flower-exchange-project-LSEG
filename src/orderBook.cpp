@@ -41,7 +41,7 @@ vector<TradeFill> OrderBook::execute(Order& incomingOrder) {
              
             // Breaks if the best price is not equal to incoming order price
             // But we could change to bestPrice < incomingOrder.price to have a better trade execution
-            if (!aggressive && bestPrice != incomingOrder.price) {
+            if (!aggressive && bestPrice > incomingOrder.price) {
                 break;
             }
 
@@ -72,7 +72,7 @@ vector<TradeFill> OrderBook::execute(Order& incomingOrder) {
             double bestPrice = levelIt->first;
 
             // Same as above, but for sell orders
-            if (!aggressive && bestPrice != incomingOrder.price) {
+            if (!aggressive && bestPrice < incomingOrder.price) {
                 break;
             }
 

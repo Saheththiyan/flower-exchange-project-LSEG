@@ -57,7 +57,8 @@ Partial fills on both sides are handled. The resting order gets a `PFill` report
 **Requirements:** GCC/G++ with C++17, Make, Linux/Unix or WSL
 ```bash
 make build    # compiles to build/exchange_app
-make run      # build + run
+make run      # build + run (Default file name is order.csv)
+make run FILE=[FILE_NAME]    # overrides the input file
 make clean    # removes build/
 make rebuild  # clean + build
 ```

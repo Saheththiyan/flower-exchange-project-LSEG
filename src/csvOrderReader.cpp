@@ -16,7 +16,7 @@ vector<string> CSVOrderReader::splitCsvLine(const string &line) {
 }
 
 bool CSVOrderReader::isHeader(const vector<string>& fields) {
-    return !fields.empty() && fields[0] == "Cl. Ord.ID";
+    return !fields.empty() && fields[0] == "Cl. Ord. ID";
 }
 
 Order CSVOrderReader::parseOrder(const vector<string>& fields, [[maybe_unused]] size_t lineNumber) {
@@ -55,7 +55,7 @@ Order CSVOrderReader::parseOrder(const vector<string>& fields, [[maybe_unused]] 
             reason = "Invalid size";
         }
     }
-    if ((quantity < 10 || quantity > 1000) && reason.empty()) {
+    if (((quantity < 10 || quantity > 1000) || (quantity % 10 != 0)) && reason.empty()) {
         reason = "Invalid size";
     }
 

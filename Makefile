@@ -73,7 +73,10 @@ $(BUILD_DIR)/main.o: main.cpp
 # Run the application
 run: build
 	@echo "Running $(TARGET)..."
-	./$(TARGET)
+	./$(TARGET) $(FILE)
+
+# Default input file
+FILE ?= order.csv
 
 # Clean build artifacts
 clean:
